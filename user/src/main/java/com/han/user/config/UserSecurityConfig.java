@@ -30,8 +30,8 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
                     .anyRequest().authenticated()
                 .and()
                     .formLogin()
-                    .loginPage("/login")
-                    .loginProcessingUrl("/login")
+                    .loginPage("/login.html")
+                    .loginProcessingUrl("/login.html")
                     .permitAll();
 
         // 关闭csrf跨域攻击防御

@@ -7,22 +7,22 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.Column;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import java.util.Collection;
 
 @Data
+@Entity
 @Table(name = "user")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class User implements UserDetails {
 
+    @Id
     @Column(name="id")
     private Integer id;
 
-    @Column(name="userName")
+    @Column(name="username")
     private String userName;
 
     @Column(name="password")
@@ -43,21 +43,21 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return true;
     }
 }

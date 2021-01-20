@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: user
+  mvc:
+    view:
+      suffix: ".html"
+      prefix: "static/"
   cloud:
     nacos:
       discovery:

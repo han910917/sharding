@@ -24,7 +24,7 @@ public class LoginValidateAuthenticationProvider implements AuthenticationProvid
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String userName = authentication.getName();
 
-        String password = (String) authentication.getPrincipal();
+        String password = (String) authentication.getCredentials();
 
         User user = (User) userService.loadUserByUsername(userName);
 
@@ -38,7 +38,7 @@ public class LoginValidateAuthenticationProvider implements AuthenticationProvid
             throw new CredentialsExpiredException("该账户的登录凭证已过期，请重新登录");
         }
 
-        if(!passwordEncoder.matches(password, user.getUsername())){
+        if(!passwordEncoder.matches(password, user.getPassword())){
             throw new BadCredentialsException("输入密码错误!");
         }
         return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());

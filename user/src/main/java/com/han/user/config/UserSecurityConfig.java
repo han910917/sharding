@@ -1,5 +1,7 @@
 package com.han.user.config;
 
+import com.han.user.handler.LoginFailureHandler;
+import com.han.user.handler.LoginSuccessHandler;
 import com.han.user.provider.LoginValidateAuthenticationProvider;
 import com.han.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,12 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private LoginValidateAuthenticationProvider loginValidateAuthenticationProvider;
 
+    @Autowired
+    private LoginSuccessHandler loginSuccessHandler;
+
+    @Autowired
+    private LoginFailureHandler loginFailureHandler;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
@@ -25,20 +33,20 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-            .antMatchers("/hello", "/login.html").permitAll()
-            .anyRequest().authenticated()
-            .and()
-            .formLogin()
-            .successForwardUrl("/success")
-            .permitAll();
+        http.httpBasic()
+                .and()
+                    .authorizeRequests()
+                    .anyRequest().authenticated()
+                .and()
+                    .formLogin()
+                    .loginPage("/login")
+                    .loginProcessingUrl("/login")
+                    .defaultSuccessUrl("/index")
+                    .successHandler(loginSuccessHandler)
+                    .failureHandler(loginFailureHandler)
+                    .permitAll();
 
         // 关闭csrf跨域攻击防御
         http.csrf().disable();
-    }
-
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        super.configure(web);
     }
 }

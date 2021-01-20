@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class UserController {
 
-    @RequestMapping("/hello")
+    @RequestMapping("/index")
     public String hello() {
         //这边我们,默认是返到templates下的login.html
-        return "login";
+        return "index";
     }
 
     @RequestMapping("/login")

@@ -9,10 +9,27 @@
 <form id="loginForm" action="/login" method="post">
     用户名：<input type="text" id="username" name="username"><br/><br/>
     密&nbsp;&nbsp;&nbsp;码：<input type="password" id="password" name="password"><br/><br/>
+    <input type="text" id="code" name="code">
+    <img id="verImg" width="113px" height="36px" onclick="getCode()"/>
     <button id="loginBtn" type="button">登录</button>
 </form>
 <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
 <script type="text/javascript">
+    $(function(){
+        getCode();
+    });
+
+    function getCode(){
+        $.ajax({
+            type: "POST",
+            url: "/getCode",
+            dataType: "JSON",
+            success: function (data) {
+                $("#verImg").attr("src", data.img);
+            }
+        });
+    }
+
     $("#loginBtn").click(function () {
         $.ajax({
             type: "POST",
@@ -25,7 +42,6 @@
                 }
             }
         });
-
     });
 
 </script>

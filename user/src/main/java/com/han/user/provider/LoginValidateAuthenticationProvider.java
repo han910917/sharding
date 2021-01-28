@@ -1,8 +1,10 @@
 package com.han.user.provider;
 
+import com.han.user.details.CustomWebAuthenticationDetails;
 import com.han.user.domain.entity.User;
 import com.han.user.service.UserService;
 import com.han.user.service.impl.UserServiceImpl;
+import com.han.user.utils.ImageCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -25,6 +27,13 @@ public class LoginValidateAuthenticationProvider implements AuthenticationProvid
         String userName = authentication.getName();
 
         String password = (String) authentication.getCredentials();
+
+        CustomWebAuthenticationDetails details = (CustomWebAuthenticationDetails) authentication.getDetails();
+
+        String imgCode = details.getImgCode();
+        if(!ImageCodeUtil.validateImgCode(imgCode)){
+            throw new DisabledException("验证码输入错误");
+        }
 
         User user = (User) userService.loadUserByUsername(userName);
 

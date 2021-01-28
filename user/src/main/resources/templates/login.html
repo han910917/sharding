@@ -32,11 +32,12 @@
 
     $("#loginBtn").click(function () {
         $.ajax({
-            type: "POST",
+            type: "post",
             url: "/login",
             data: $("#loginForm").serialize(),
             dataType: "JSON",
             success: function (data) {
+                console.log(data);
                 if(data.code == 200){
                     window.location.href = "/index";
                 }

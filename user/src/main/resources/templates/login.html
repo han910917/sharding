@@ -14,7 +14,9 @@
     <button id="loginBtn" type="button">登录</button>
 </form>
 <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
+<script src="http://www.broofa.com/Tools/Math.uuid.js"></script>
 <script type="text/javascript">
+    var uuid = Math.uuid();
     $(function(){
         getCode();
     });
@@ -23,6 +25,7 @@
         $.ajax({
             type: "POST",
             url: "/getCode",
+            data: {uuid : uuid},
             dataType: "JSON",
             success: function (data) {
                 $("#verImg").attr("src", data.img);
@@ -31,6 +34,7 @@
     }
 
     $("#loginBtn").click(function () {
+        console.log($("#loginForm").param())
         $.ajax({
             type: "post",
             url: "/login",

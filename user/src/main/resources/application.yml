@@ -3,3 +3,7 @@ spring:
     active: dev #表示激活开发环境
   mvc:
     static-path-pattern: /**
+  redis:
+    host: localhost
+    port: 6379
+    password: redis

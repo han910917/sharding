@@ -1,6 +1,8 @@
 package com.han.user.filter;
 
 import com.han.user.handler.LoginFailureHandler;
+import com.han.user.utils.ImageCodeUtil;
+import com.han.user.utils.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
@@ -40,23 +42,21 @@ public class CheckCodeFilter extends OncePerRequestFilter {
     }
 
     //校验规则
-    private void validate(HttpServletRequest request) throws ServletRequestBindingException {
-
-        HttpSession session = request.getSession();
+    private void validate(HttpServletRequest request){
 
         String checkCode = request.getParameter("code");
         if(StringUtils.isEmpty(checkCode)){
             throw new SessionAuthenticationException("验证码不能为空");
         }
 
-        // 获取session池中的验证码谜底,session中不存在的情况
-        String checkCode_session = (String) session.getAttribute("code");
-        if(Objects.isNull(checkCode_session)) {
+        String checkCode_redis = RedisUtil.getValue(ImageCodeUtil.VALIDATE_CODE + ":" + request.getParameter("uuid"));
+
+        if(Objects.isNull(checkCode_redis)) {
             throw new SessionAuthenticationException("验证码不存在");
         }
 
         // 请求验证码校验
-        if(!StringUtils.equalsIgnoreCase(checkCode_session, checkCode)) {
+        if(!StringUtils.equalsIgnoreCase(checkCode_redis, checkCode)) {
             throw new SessionAuthenticationException("验证码不匹配");
         }
     }

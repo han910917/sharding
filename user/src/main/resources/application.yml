@@ -2,7 +2,17 @@ spring:
   profiles:
     active: dev #表示激活开发环境
   mvc:
-    static-path-pattern: /**
+    static-path-pattern: /static/**
+  freemarker:
+    cache: false
+    charset: utf-8
+    check-template-location: true
+    content-type: text/html
+    expose-request-attributes: false
+    expose-session-attributes: false
+    request-context-attribute: request
+    suffix: .html
+    template-loader-path: classpath:/static/,classpath:/META-INF/resources/,classpath:/META-INF/resources/webjars/
   redis:
     host: localhost
     port: 6379

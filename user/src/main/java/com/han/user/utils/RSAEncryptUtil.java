@@ -15,13 +15,16 @@ import java.util.Map;
 
 public class RSAEncryptUtil {
 
+    private static final String PUBLIC_KEY = "publicKey";
+    private static final String PRIVATE_KEY = "privateKey";
+
     /**
     * @description: 生成密匙对
     * @author: hgm
     * @date: 2021/2/1 11:48
     * @return: java.util.Map<java.lang.String,java.lang.Object>
     */
-    public static Map<String, Object> genKeyPair() throws NoSuchAlgorithmException {
+    public static Map<String, Object> genKeyPair(String uuid) throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(1024, new SecureRandom());
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
@@ -36,8 +39,8 @@ public class RSAEncryptUtil {
         map.put("publicKey", publicKeyStr);
         map.put("privateKey", privateKeyStr);
 
-        ServletRequestUtil.getRequest().getSession().setAttribute("publicKey", publicKeyStr);
-        ServletRequestUtil.getRequest().getSession().setAttribute("privateKey", privateKey);
+        RedisUtil.setStrValue(PUBLIC_KEY + ":" + uuid, publicKeyStr, 1);
+        RedisUtil.setStrValue(PRIVATE_KEY + ":" + uuid, privateKeyStr, 1);
         return map;
     }
 

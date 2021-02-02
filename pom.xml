@@ -10,7 +10,6 @@
 
     <modules>
         <module>user</module>
-        <module>cache</module>
     </modules>
 
     <properties>

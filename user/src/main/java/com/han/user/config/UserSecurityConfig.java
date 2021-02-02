@@ -36,7 +36,7 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
             .failureHandler(loginFailureHandler)
             .and()
             .authorizeRequests()
-            .antMatchers("/login", "/getCode")
+            .antMatchers("/login", "/getCode", "/getPublicKey")
             .permitAll()
             .anyRequest()
             .authenticated();

@@ -24,7 +24,7 @@ public class ImageCodeUtil {
         captcha.setLen(2);
 
         String result = captcha.text();
-        RedisUtil.setStrValue(VALIDATE_CODE + ":" + uuid, captcha.toBase64(), 3);
+        RedisUtil.setStrValue(VALIDATE_CODE + ":" + uuid, result, 3);
 
         Map<String, String> image = new HashMap<>();
         image.put("img", captcha.toBase64());

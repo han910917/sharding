@@ -15,6 +15,7 @@ import java.util.Map;
 public class ImageCodeUtil {
 
     public static final String VALIDATE_CODE = "validate_code";
+    public static final String UUID = "validate_code";
 
     public static Map<String, String> getCode(HttpServletRequest request, HttpServletResponse response){
         String uuid = request.getParameter("uuid");
@@ -25,19 +26,11 @@ public class ImageCodeUtil {
 
         String result = captcha.text();
         RedisUtil.setStrValue(VALIDATE_CODE + ":" + uuid, result, 3);
+        RedisUtil.setStrValue(UUID, uuid, 3);
 
         Map<String, String> image = new HashMap<>();
         image.put("img", captcha.toBase64());
 
         return image;
-    }
-
-    public static boolean validateImgCode(String imgCode) {
-        String uuid = ServletRequestUtil.getRequest().getParameter("uuid");
-        String value = RedisUtil.getValue(VALIDATE_CODE + ":" + uuid);
-
-        if(StringUtils.isBlank(value)) throw new SessionAuthenticationException("验证码过期");
-
-        return StringUtils.equalsIgnoreCase(imgCode, value);
     }
 }

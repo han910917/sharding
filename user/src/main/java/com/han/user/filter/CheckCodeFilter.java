@@ -2,7 +2,9 @@ package com.han.user.filter;
 
 import com.han.user.handler.LoginFailureHandler;
 import com.han.user.utils.ImageCodeUtil;
+import com.han.user.utils.RSAEncryptUtil;
 import com.han.user.utils.RedisUtil;
+import com.han.user.utils.ServletRequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.security.KeyPair;
 import java.util.Objects;
 
 @Component
@@ -41,7 +44,13 @@ public class CheckCodeFilter extends OncePerRequestFilter {
         filterChain.doFilter(request,response);
     }
 
-    //校验规则
+    /**
+    * @description: 验证验证码和解密密码
+    * @author: hgm
+    * @date: 2021/2/3 14:06
+    * @param request: 
+    * @return: void
+    */
     private void validate(HttpServletRequest request){
 
         String checkCode = request.getParameter("code");
@@ -49,7 +58,7 @@ public class CheckCodeFilter extends OncePerRequestFilter {
             throw new SessionAuthenticationException("验证码不能为空");
         }
 
-        String checkCode_redis = RedisUtil.getValue(ImageCodeUtil.VALIDATE_CODE + ":" + request.getParameter("uuid"));
+        String checkCode_redis = (String) RedisUtil.getValue(ImageCodeUtil.VALIDATE_CODE + ":" + request.getParameter("uuid"));
 
         if(Objects.isNull(checkCode_redis)) {
             throw new SessionAuthenticationException("验证码不存在");

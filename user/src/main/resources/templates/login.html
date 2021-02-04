@@ -2,7 +2,7 @@
 <html  class="x-admin-sm">
 <head>
 	<meta charset="UTF-8">
-	<title>后台登录-X-admin2.2</title>
+	<title>登录</title>
 	<meta name="renderer" content="webkit|ie-comp|ie-stand">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
@@ -13,19 +13,19 @@
     <script type="text/javascript" src="/static/js/jquery.min.js"></script>
     <script src="/static/lib/layui/layui.js" charset="utf-8"></script>
     <script src="/static/js/Math.uuid.js"></script>
-    <script src="/static/js/jquery.jcryption.js"></script>
+    <script src="/static/js/jquery.jcryption-1.1.js"></script>
 </head>
 <body class="login-bg">
     <div class="login layui-anim layui-anim-up">
-        <div class="message">x-admin2.0-管理登录</div>
+        <div class="message">登录</div>
         <div id="darkbannerwrap"></div>
 
         <form method="post" class="layui-form" >
-            <input name="username" placeholder="用户名"  type="text" lay-verify="required" class="layui-input" >
+            <input id="username" name="username" placeholder="用户名"  type="text" lay-verify="required" class="layui-input" >
             <hr class="hr15">
-            <input name="password" lay-verify="required" placeholder="密码"  type="password" class="layui-input">
+            <input id="password" name="password" lay-verify="required" placeholder="密码"  type="password" class="layui-input">
             <hr class="hr15">
-            <input name="code" placeholder="验证码" type="text" class="layui-input" style="width: 50%; display: inline">
+            <input id="code" name="code" placeholder="验证码" type="text" class="layui-input" style="width: 50%; display: inline">
             <img class="layui-img" style="width: 49%; height: 50px;" />
             <hr class="hr15">
             <input id="uuid" name="uuid" type="text" class="layui-input" style="display: none">
@@ -59,15 +59,9 @@
                 data: {uuid : uuid},
                 dataType: "JSON",
                 success: function (data) {
-                    if(null == data){
-                        layui.msg("请刷新页面登录", {icon: 5, time: 1000});
-                        return false;
-                    }
-
-                    var str = data.key;
-                    $.jCryption.getKeys(str, function(receivedKeys){
+                    $.jCryption.getKeys(data, function(receivedKeys) {
                         key = receivedKeys;
-                    })
+                    });
                 }
             });
         }
@@ -76,37 +70,37 @@
             getCode();
             getPublicKey();
             $("#uuid").val(uuid);
+
             layui.use('form', function (){
                 var from = layui.form;
 
                 // 表单提交
-                from.on('submit(login)', function (obj) {
+                from.on('submit(login)', function () {
                     layer.load(2);
 
-                    var oldPass = obj.field.password;
-                    //主要是为了处理中文密码的情况
-                    oldPass = encodeURIComponent(oldPass);
+                    console.log($("#password").val());
+                    $.jCryption.encrypt($("#password").val(), key, function(encryptPassword) {
 
-                    console.log(89)
-                    //公钥加密
-                    obj.field.password = $.jCryption.encrypt(oldPass, key)
+                        console.log(encryptPassword);
 
-                    $.ajax({
-                        url: '/login',
-                        data: $(".layui-form").serialize(),
-                        type: 'POST',
-                        success: function (data) {
-                            if(data.code == 200){
-                                layer.msg('登录成功', {icon: 1, time: 500}, function () {
-                                    location.href='index.html'
-                                });
-                            }else {
-                                layer.msg(data.message, {icon: 5, time: 1000});
-                                $('.layui-img').trigger("click");
+                        var str = "username=" + $("#username").val() + "&password=" + encryptPassword + "&uuid=" + $("#uuid").val() + "&code=" + $("#code").val();
+
+                        $.ajax({
+                            url: '/login',
+                            data: str,
+                            type: 'POST',
+                            success: function (data) {
+                                if (data.code == 200) {
+                                    layer.msg('登录成功', {icon: 1, time: 500}, function () {
+                                        location.href = 'index.html'
+                                    });
+                                } else {
+                                    layer.msg(data.message, {icon: 5, time: 1000});
+                                    $('.layui-img').trigger("click");
+                                }
                             }
-                        }
+                        });
                     });
-
                     //阻止表单跳转
                     return false;
                 });

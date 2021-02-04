@@ -1,86 +1,140 @@
 package com.han.user.utils;
 
-import com.google.common.collect.Maps;
-import org.apache.commons.codec.binary.Base64;
+import com.alibaba.fastjson.JSONObject;
 
 import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Map;
 
 public class RSAEncryptUtil {
 
-    private static final String PUBLIC_KEY = "publicKey";
-    private static final String PRIVATE_KEY = "privateKey";
+    public static final String KEYPAIR = "keyPair";
+
+    public static final java.security.Provider provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
+
+    public RSAEncryptUtil() {
+        java.security.Security.addProvider(provider);
+    }
 
     /**
-    * @description: 生成密匙对
+    * @description: 用给定的keyLength生成密钥对
     * @author: hgm
-    * @date: 2021/2/1 11:48
-    * @return: java.util.Map<java.lang.String,java.lang.Object>
+    * @date: 2021/2/4 11:53
+    * @param keyLength: 
+    * @return: java.security.KeyPair
     */
-    public static Map<String, Object> genKeyPair(String uuid) throws NoSuchAlgorithmException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(1024, new SecureRandom());
+    public static KeyPair generateKeypair(int keyLength) throws Exception {
+        KeyPairGenerator keyPairGenerator;
+
+        try{
+            keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        } catch (Exception e){
+            keyPairGenerator = KeyPairGenerator.getInstance("RSA", provider);
+        }
+
+        keyPairGenerator.initialize(keyLength);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-
-        String publicKeyStr = Base64.encodeBase64String(publicKey.getEncoded());
-        String privateKeyStr = Base64.encodeBase64String(privateKey.getEncoded());
-
-        Map<String, Object> map = Maps.newHashMap();
-        map.put("publicKey", publicKeyStr);
-        map.put("privateKey", privateKeyStr);
-
-        RedisUtil.setStrValue(PUBLIC_KEY + ":" + uuid, publicKeyStr, 1);
-        RedisUtil.setStrValue(PRIVATE_KEY + ":" + uuid, privateKeyStr, 1);
-        return map;
+        return keyPair;
     }
 
     /**
     * @description: 解密
     * @author: hgm
-    * @date: 2021/2/1 11:53
+    * @date: 2021/2/4 13:54
+    * @param encrypted:
+     * @param keyPair:
     * @return: java.lang.String
     */
-    public static  String decrypt(String str, String privateKey) throws Exception {
-        //64位解码加密后的字符串
-        byte[] inputByte = Base64.decodeBase64(str.getBytes("UTF-8"));
+    public static String decrypt(String encrypted, KeyPair keyPair) throws Exception {
+        Cipher cipher;
+        try{
+            cipher = Cipher.getInstance("RSA/NONE/NoPadding");
+        }catch (Exception e){
+            cipher = Cipher.getInstance("RSA/NONE/NoPadding", provider);
+        }
 
-        //base64编码的私钥
-        byte[] decoded = Base64.decodeBase64(privateKey);
+        cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
 
-        RSAPrivateKey priKey = (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decoded));
-        //RSA解密
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, priKey);
+        String[] blocks = encrypted.split("\\s");
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < blocks.length; i++) {
+            byte[] data = hexStringToByteArray(blocks[i]);
+            byte[] decrytedBlock = cipher.doFinal(data);
+            result.append(new String(decrytedBlock));
+        }
 
-        return new String(cipher.doFinal(inputByte));
+        return result.reverse().toString().substring(2);
     }
 
     /**
-    * @description: 加密
-    * @author: hgm
-    * @date: 2021/2/1 11:53
-    * @return: java.lang.String
-    */
-    public static String encrypt(String str, String publicKey) throws Exception {
-        byte[] bytes = Base64.decodeBase64(publicKey);
-
-        RSAPublicKey rsaPublicKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
-
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, rsaPublicKey);
-
-        return Base64.encodeBase64String(cipher.doFinal(str.getBytes(StandardCharsets.UTF_8)));
+     * Return public RSA key modulus
+     *
+     * @param keyPair
+     *            RSA keys
+     * @return modulus value as hex string
+     */
+    public static String getPublicKeyModulus(KeyPair keyPair) {
+        java.security.interfaces.RSAPublicKey publicKey = (java.security.interfaces.RSAPublicKey) keyPair.getPublic();
+        return publicKey.getModulus().toString(16);
     }
 
+    /**
+     * Return public RSA key exponent
+     *
+     * @param keyPair
+     *            RSA keys
+     * @return public exponent value as hex string
+     */
+    public static String getPublicKeyExponent(KeyPair keyPair) {
+        java.security.interfaces.RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        return publicKey.getPublicExponent().toString(16);
+    }
+
+    /**
+     * Max block size with given key length
+     *
+     * @param keyLength
+     *            length of key
+     * @return numeber of digits
+     */
+    public static int getMaxDigits(int keyLength) {
+        return ((keyLength * 2) / 16) + 3;
+    }
+
+    /**
+     * Convert hex string to byte array
+     *
+     * @param data
+     *            input string data
+     * @return bytes
+     */
+    public static byte[] hexStringToByteArray(String data) {
+        int k = 0;
+        byte[] results = new byte[data.length() / 2];
+        for (int i = 0; i < data.length();) {
+            results[k] = (byte) (Character.digit(data.charAt(i++), 16) << 4);
+            results[k] += (byte) (Character.digit(data.charAt(i++), 16));
+            k++;
+        }
+        return results;
+    }
+
+    public static Object genKeyPair(String uuid) throws Exception {
+        KeyPair keyPair = generateKeypair(512);
+
+        String e = getPublicKeyExponent(keyPair);
+        String n = getPublicKeyModulus(keyPair);
+        String md = String.valueOf(getMaxDigits(512));
+
+        JSONObject json = new JSONObject();
+        json.put("e", e);
+        json.put("n", n);
+        json.put("maxdigits",md);
+
+        String data = JSONObject.toJSONString(keyPair);
+        RedisUtil.setStrValue(KEYPAIR+":"+uuid, data, 3);
+        return json;
+    }
 
 }

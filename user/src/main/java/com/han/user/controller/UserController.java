@@ -52,10 +52,7 @@ public class UserController {
      */
     @RequestMapping("/getPublicKey")
     @ResponseBody
-    public Map<String, Object> getPublicKey(HttpServletRequest request) throws NoSuchAlgorithmException {
-        Map<String, Object> map = RSAEncryptUtil.genKeyPair(request.getParameter("uuid"));
-        Map<String, Object> result = Maps.newHashMap();
-        result.put("key", map.get("publicKey"));
-        return result;
+    public Object getPublicKey(HttpServletRequest request) throws Exception {
+        return RSAEncryptUtil.genKeyPair(request.getParameter("uuid"));
     }
 }

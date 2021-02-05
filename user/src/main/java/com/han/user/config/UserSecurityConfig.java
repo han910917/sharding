@@ -5,11 +5,13 @@ import com.han.user.handler.LoginFailureHandler;
 import com.han.user.handler.LoginSuccessHandler;
 import com.han.user.provider.ComAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
@@ -35,24 +37,36 @@ public class UserSecurityConfig extends WebSecurityConfigurerAdapter {
             .successHandler(loginSuccessHandler)
             .failureHandler(loginFailureHandler)
             .and()
+            .cors()
+            .and()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
             .authorizeRequests()
+            .antMatchers(HttpMethod.GET,
+                    "/",
+                    "/*.html",
+                    "/favicon.ico",
+                    "/**/*.html",
+                    "/**/*.css",
+                    "/**/*.js")
+            .permitAll()
             .antMatchers("/login", "/getCode", "/getPublicKey")
+            .permitAll()
+            .antMatchers(HttpMethod.OPTIONS)
             .permitAll()
             .anyRequest()
             .authenticated();
 
         // 关闭csrf跨域攻击防御
         http.csrf().disable();
+
+        // 禁用缓存
+        http.headers().cacheControl();
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) {
        auth.authenticationProvider(comAuthenticationProvider);
-    }
-
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        super.configure(web);
-        web.ignoring().antMatchers("/static/**");
     }
 }
